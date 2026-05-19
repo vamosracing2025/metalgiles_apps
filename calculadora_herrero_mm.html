@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora Metal Giles - Conversor a mm</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .contenedor {
+      background: white;
+      width: 100%;
+      max-width: 520px;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+      font-size: 24px;
+      color: #222;
+    }
+
+    p {
+      color: #555;
+      font-size: 14px;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 16px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .ayuda {
+      font-size: 12px;
+      color: #777;
+      margin-top: 4px;
+    }
+
+    .resultado {
+      margin-top: 24px;
+      padding: 18px;
+      border-radius: 10px;
+      background: #222;
+      color: white;
+      text-align: center;
+    }
+
+    .resultado span {
+      display: block;
+      font-size: 34px;
+      font-weight: bold;
+      margin-top: 6px;
+    }
+
+    .botones {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .limpiar {
+      background: #ddd;
+      color: #222;
+    }
+
+    .copiar {
+      background: #444;
+      color: white;
+    }
+
+    .nota {
+      margin-top: 18px;
+      font-size: 12px;
+      color: #666;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="contenedor">
+    <h1>Calculadora de Herrero</h1>
+    <p>Convertidor rápido a milímetros para pulgadas, fracciones y calibres de chapa.</p>
+
+    <label for="pulgadas">Pulgadas decimales</label>
+    <input id="pulgadas" type="number" step="0.001" placeholder="Ej: 1.25" oninput="calcularDesdePulgadas()" />
+    <div class="ayuda">1 pulgada = 25,4 mm</div>
+
+    <label for="fraccion">Fracción de pulgada</label>
+    <input id="fraccion" type="text" placeholder="Ej: 1/8, 3/16, 1 1/2" oninput="calcularDesdeFraccion()" />
+    <div class="ayuda">Acepta fracciones simples o mixtas: 1/4, 5/16, 1 1/2</div>
+
+    <label for="calibre">Calibre de chapa</label>
+    <select id="calibre" onchange="calcularDesdeCalibre()">
+      <option value="">Seleccionar calibre</option>
+      <option value="0.912">Calibre 20 - 0,912 mm</option>
+      <option value="1.214">Calibre 18 - 1,214 mm</option>
+      <option value="1.519">Calibre 16 - 1,519 mm</option>
+      <option value="1.897">Calibre 14 - 1,897 mm</option>
+      <option value="2.657">Calibre 12 - 2,657 mm</option>
+      <option value="3.416">Calibre 10 - 3,416 mm</option>
+      <option value="4.176">Calibre 8 - 4,176 mm</option>
+      <option value="4.935">Calibre 6 - 4,935 mm</option>
+      <option value="5.695">Calibre 4 - 5,695 mm</option>
+      <option value="6.073">Calibre 3 - 6,073 mm</option>
+      <option value="6.452">Calibre 2 - 6,452 mm</option>
+      <option value="6.831">Calibre 1 - 6,831 mm</option>
+    </select>
+    <div class="ayuda">Valores orientativos. Pueden variar según norma y proveedor.</div>
+
+    <div class="resultado">
+      Resultado en milímetros
+      <span id="resultado">0,00 mm</span>
+    </div>
+
+    <div class="botones">
+      <button class="limpiar" onclick="limpiar()">Limpiar</button>
+      <button class="copiar" onclick="copiarResultado()">Copiar resultado</button>
+    </div>
+
+    <div class="nota">
+      <strong>Uso práctico:</strong> escribí en cualquiera de los campos. Al cargar un valor, se limpian los otros para evitar confusión. Para herrería conviene redondear según el material real disponible: chapa 1,6 mm, 2 mm, 3 mm, caño estructural, planchuela, ángulo, etc.
+    </div>
+  </div>
+
+  <script>
+    const resultado = document.getElementById('resultado');
+    const pulgadas = document.getElementById('pulgadas');
+    const fraccion = document.getElementById('fraccion');
+    const calibre = document.getElementById('calibre');
+
+    function mostrar(mm) {
+      if (isNaN(mm) || mm <= 0) {
+        resultado.textContent = '0,00 mm';
+        return;
+      }
+      resultado.textContent = mm.toLocaleString('es-AR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 3
+      }) + ' mm';
+    }
+
+    function calcularDesdePulgadas() {
+      fraccion.value = '';
+      calibre.value = '';
+
+      const valor = parseFloat(pulgadas.value.replace(',', '.'));
+      mostrar(valor * 25.4);
+    }
+
+    function calcularDesdeFraccion() {
+      pulgadas.value = '';
+      calibre.value = '';
+
+      const texto = fraccion.value.trim().replace(',', '.');
+      const valorEnPulgadas = convertirFraccionAPulgadas(texto);
+      mostrar(valorEnPulgadas * 25.4);
+    }
+
+    function convertirFraccionAPulgadas(texto) {
+      if (!texto) return NaN;
+
+      // Caso mixto: "1 1/2"
+      if (texto.includes(' ')) {
+        const partes = texto.split(' ');
+        const entero = parseFloat(partes[0]);
+        const fraccionSimple = convertirFraccionAPulgadas(partes[1]);
+        return entero + fraccionSimple;
+      }
+
+      // Caso fracción simple: "3/16"
+      if (texto.includes('/')) {
+        const partes = texto.split('/');
+        const numerador = parseFloat(partes[0]);
+        const denominador = parseFloat(partes[1]);
+        if (denominador === 0) return NaN;
+        return numerador / denominador;
+      }
+
+      // Caso número entero o decimal
+      return parseFloat(texto);
+    }
+
+    function calcularDesdeCalibre() {
+      pulgadas.value = '';
+      fraccion.value = '';
+
+      const mm = parseFloat(calibre.value);
+      mostrar(mm);
+    }
+
+    function limpiar() {
+      pulgadas.value = '';
+      fraccion.value = '';
+      calibre.value = '';
+      resultado.textContent = '0,00 mm';
+    }
+
+    function copiarResultado() {
+      navigator.clipboard.writeText(resultado.textContent);
+    }
+  </script>
+</body>
+</html>

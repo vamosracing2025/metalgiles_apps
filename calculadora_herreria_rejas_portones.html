@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Herrería - Rejas y Portones</title>
+  <style>
+    :root {
+      --bg: #f4f4f5;
+      --panel: #ffffff;
+      --text: #18181b;
+      --muted: #71717a;
+      --line: #d4d4d8;
+      --accent: #27272a;
+      --danger: #b91c1c;
+      --ok: #166534;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: var(--accent);
+      color: white;
+      padding: 18px 24px;
+    }
+
+    header h1 {
+      margin: 0 0 4px;
+      font-size: 24px;
+    }
+
+    header p {
+      margin: 0;
+      color: #d4d4d8;
+      font-size: 14px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .section-title {
+      margin: 18px 0 8px;
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      background: var(--accent);
+      color: white;
+      padding: 11px 12px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    button.secondary {
+      background: #52525b;
+    }
+
+    button:hover { opacity: 0.93; }
+
+    .results-layout {
+      display: grid;
+      grid-template-columns: minmax(380px, 1fr) minmax(380px, 1fr);
+      gap: 16px;
+    }
+
+    .drawing-wrap {
+      overflow: auto;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      background: #fafafa;
+      min-height: 560px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    svg {
+      max-width: 100%;
+      height: auto;
+      background: white;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 7px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fafafa;
+    }
+
+    .card .label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .card .value {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-top: 10px;
+    }
+
+    .warning {
+      color: var(--danger);
+      font-weight: bold;
+    }
+
+    .ok {
+      color: var(--ok);
+      font-weight: bold;
+    }
+
+    @media print {
+      body { background: white; }
+      header, .input-panel, button { display: none; }
+      main { display: block; padding: 0; }
+      .panel { box-shadow: none; border: 0; }
+      .results-layout { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 1050px) {
+      main { grid-template-columns: 1fr; }
+      .results-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Calculadora de Herrería - Rejas y Portones</h1>
+    <p>Versión 1: diseño frontal, lista de cortes, barras necesarias, sobrante y costo estimado.</p>
+  </header>
+
+  <main>
+    <section class="panel input-panel">
+      <h2>Datos del trabajo</h2>
+
+      <div class="section-title">Proyecto</div>
+      <p class="note"><strong>Siglas:</strong> A = ancho, H = alto, P = profundidad, E = espesor, L = largo, S = separación libre.</p>
+      <label>Nombre</label>
+      <input id="projectName" value="Reja / portón" />
+
+      <div class="grid2" style="margin-top:10px;">
+        <div>
+          <label>A total - ancho total (cm)</label>
+          <input id="widthCm" type="number" value="120" min="10" step="0.1" />
+        </div>
+        <div>
+          <label>H total - alto total (cm)</label>
+          <input id="heightCm" type="number" value="200" min="10" step="0.1" />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>Hojas</label>
+          <select id="leafCount">
+            <option value="1">1 hoja / panel</option>
+            <option value="2">2 hojas / paneles</option>
+            <option value="3">3 hojas / paneles</option>
+            <option value="4">4 hojas / paneles</option>
+          </select>
+        </div>
+        <div>
+          <label>Tipo</label>
+          <select id="projectType">
+            <option value="abertura">Abertura / cerramiento</option>
+            <option value="reja">Reja fija</option>
+            <option value="porton">Portón</option>
+            <option value="puerta">Puerta</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-title">Marco fijo exterior de la abertura</div>
+      <div class="grid2">
+        <div>
+          <label>Usar marco fijo exterior</label>
+          <select id="useOuterFrame">
+            <option value="no">No</option>
+            <option value="yes">Sí</option>
+          </select>
+        </div>
+        <div>
+          <label>Material marco fijo</label>
+          <input id="outerFrameMaterial" value="Ángulo 1x1/8 / hierro angular" />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>Ala visible/tope del angular (cm)</label>
+          <input id="outerFrameFaceCm" type="number" value="2.5" min="0.5" step="0.1" />
+        </div>
+        <div>
+          <label>Luz montaje paneles dentro del marco (cm)</label>
+          <input id="outerFrameClearanceCm" type="number" value="1" min="0" step="0.1" />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>Precio barra marco fijo ($)</label>
+          <input id="outerFrameStockPrice" type="number" value="0" min="0" step="100" />
+        </div>
+        <div>
+          <label>Referencia</label>
+          <input value="tope perimetral / apoyo de hojas" disabled />
+        </div>
+      </div>
+
+      <div class="section-title">Marco de cada hoja / panel</div>
+      <div class="grid2">
+        <div>
+          <label>Material marco</label>
+          <input id="frameMaterial" value="Caño 40x40x1,6" />
+        </div>
+        <div>
+          <label>A/E marco - ancho o espesor visible del caño (cm)</label>
+          <input id="frameTubeCm" type="number" value="4" min="1" step="0.1" />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>Descontar medida visible del marco en horizontales</label>
+          <select id="discountHorizontals">
+            <option value="yes">Sí: horizontales van entre los verticales</option>
+            <option value="no">No: horizontales a medida exterior / inglete</option>
+          </select>
+        </div>
+        <div>
+          <label>Luz/juego entre paneles separados (cm)</label>
+          <input id="centerGapCm" type="number" value="1" min="0" step="0.1" />
+        </div>
+      </div>
+
+      <div class="section-title">Barrotes / relleno vertical</div>
+      <div class="grid2">
+        <div>
+          <label>Usar barrotes</label>
+          <select id="useBars">
+            <option value="yes">Sí</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div>
+          <label>Material barrotes</label>
+          <input id="barMaterial" value="Caño 20x20x1,6 / varilla 12 mm" />
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div>
+          <label>A barrote - ancho visto de frente (cm)</label>
+          <input id="barWidthCm" type="number" value="2" min="0.3" step="0.1" />
+        </div>
+        <div>
+          <label>P barrote - profundidad hacia atrás (cm)</label>
+          <input id="barDepthCm" type="number" value="2" min="0.3" step="0.1" />
+        </div>
+        <div>
+          <label>S libre - separación libre deseada (cm)</label>
+          <input id="barSpacingCm" type="number" value="10" min="1" step="0.5" />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>Forma de colocar barrotes</label>
+          <select id="barFitMode">
+            <option value="auto_adjust">Calcular cantidad y repartir espacios parejos</option>
+            <option value="max_spacing">No superar la separación deseada</option>
+          </select>
+        </div>
+        <div>
+          <label>Descuento H barrote - descuento de alto (cm)</label>
+          <input id="barHeightDiscountCm" type="number" value="8" min="0" step="0.5" />
+        </div>
+      </div>
+
+      <div class="section-title">Travesaños</div>
+      <div class="grid2">
+        <div>
+          <label>Material travesaños</label>
+          <input id="crossMaterial" value="Caño 40x40x1,6" />
+        </div>
+        <div>
+          <label>Medida visible travesaño de frente (cm)</label>
+          <input id="crossTubeCm" type="number" value="4" min="0.5" step="0.1" />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>S vertical libre - separación vertical deseada (cm)</label>
+          <input id="crossSpacingCm" type="number" value="80" min="10" step="1" />
+        </div>
+        <div>
+          <label>Forma de calcular travesaños</label>
+          <select id="crossFitMode">
+            <option value="none">No usar travesaños</option>
+            <option value="auto">Calcular automáticamente</option>
+            <option value="manual">Cantidad manual</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>Cantidad manual de travesaños internos</label>
+          <input id="crossCount" type="number" value="1" min="0" step="1" />
+        </div>
+        <div>
+          <label>Nota</label>
+          <input value="Usa medida visible + separación libre" disabled />
+        </div>
+      </div>
+
+      <div class="section-title">Chapa inferior opcional</div>
+      <div class="grid2">
+        <div>
+          <label>H chapa inferior - altura (cm)</label>
+          <input id="sheetHeightCm" type="number" value="0" min="0" step="1" />
+        </div>
+        <div>
+          <label>Nombre chapa</label>
+          <input id="sheetMaterial" value="Chapa lisa" />
+        </div>
+      </div>
+
+      <div class="section-title">Barras, merma y costos</div>
+      <div class="grid2">
+        <div>
+          <label>L barra comercial - largo (cm)</label>
+          <input id="stockLengthCm" type="number" value="600" min="100" step="1" />
+        </div>
+        <div>
+          <label>Merma por corte / disco (cm)</label>
+          <input id="kerfCm" type="number" value="0.3" min="0" step="0.1" />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>Precio barra marco ($)</label>
+          <input id="frameStockPrice" type="number" value="0" min="0" step="100" />
+        </div>
+        <div>
+          <label>Precio barra barrotes ($)</label>
+          <input id="barStockPrice" type="number" value="0" min="0" step="100" />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>Precio barra travesaños ($)</label>
+          <input id="crossStockPrice" type="number" value="0" min="0" step="100" />
+        </div>
+        <div>
+          <label>Precio m² chapa ($)</label>
+          <input id="sheetPriceM2" type="number" value="0" min="0" step="100" />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label>Extra accesorios ($)</label>
+          <input id="extraCost" type="number" value="0" min="0" step="100" />
+        </div>
+        <div>
+          <label>Referencia</label>
+          <input value="bisagras, cerradura, pasador, ruedas" disabled />
+        </div>
+      </div>
+
+      <button onclick="calculate()">Calcular y dibujar</button>
+      <button class="secondary" onclick="window.print()">Imprimir / guardar PDF</button>
+      <p class="note">Los cálculos son para cortes rectos. Si usás ingletes, después podemos agregar descuento/compensación específica según cómo cortes.</p>
+    </section>
+
+    <section class="panel">
+      <h2 id="resultTitle">Resultado</h2>
+      <div class="results-layout">
+        <div>
+          <div class="drawing-wrap" id="drawing"></div>
+        </div>
+        <div>
+          <div class="summary" id="summary"></div>
+
+          <h3>Lista de cortes</h3>
+          <div id="cutList"></div>
+
+          <h3>Compra estimada</h3>
+          <div id="buyList"></div>
+
+          <h3>Observaciones</h3>
+          <div id="notes"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function num(id) {
+      return Number(document.getElementById(id).value || 0);
+    }
+
+    function val(id) {
+      return document.getElementById(id).value;
+    }
+
+    function fmtCm(n) {
+      return `${round(n, 1)} cm`;
+    }
+
+    function fmtMoney(n) {
+      return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
+    }
+
+    function round(n, d = 2) {
+      const f = Math.pow(10, d);
+      return Math.round((Number(n) + Number.EPSILON) * f) / f;
+    }
+
+    function groupPieces(pieces) {
+      const map = new Map();
+      for (const p of pieces) {
+        const key = `${p.material}|${round(p.length,1)}|${p.desc}`;
+        if (!map.has(key)) map.set(key, { ...p, qty: 0 });
+        map.get(key).qty += p.qty;
+      }
+      return Array.from(map.values());
+    }
+
+    function optimizeBars(lengths, stockLength, kerf) {
+      const items = [...lengths].sort((a, b) => b - a);
+      const bars = [];
+      for (const len of items) {
+        let placed = false;
+        for (const bar of bars) {
+          const needed = len + (bar.items.length > 0 ? kerf : 0);
+          if (bar.used + needed <= stockLength + 0.0001) {
+            bar.items.push(len);
+            bar.used += needed;
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          bars.push({ items: [len], used: len });
+        }
+      }
+      return bars.map((b, i) => ({
+        index: i + 1,
+        items: b.items,
+        used: b.used,
+        waste: stockLength - b.used
+      }));
+    }
+
+    function calculate() {
+      const projectName = val('projectName');
+      const W = num('widthCm');
+      const H = num('heightCm');
+      const leafCount = Number(val('leafCount'));
+      const projectType = val('projectType');
+      const useOuterFrame = val('useOuterFrame') === 'yes';
+      const outerFrameMaterial = val('outerFrameMaterial');
+      const outerFrameFace = num('outerFrameFaceCm');
+      const outerFrameClearance = useOuterFrame ? num('outerFrameClearanceCm') : 0;
+      const outerFrameStockPrice = num('outerFrameStockPrice');
+      const frameMaterial = val('frameMaterial');
+      const crossMaterial = val('crossMaterial');
+      const barMaterial = val('barMaterial');
+      const sheetMaterial = val('sheetMaterial');
+      const frameTube = num('frameTubeCm');
+      const discountHorizontals = val('discountHorizontals') === 'yes';
+      const centerGap = leafCount >= 2 ? num('centerGapCm') : 0;
+      const useBars = val('useBars') === 'yes';
+      const barSpacing = num('barSpacingCm');
+      const barWidth = num('barWidthCm');
+      const barDepth = num('barDepthCm');
+      const barFitMode = val('barFitMode');
+      const barHeightDiscount = num('barHeightDiscountCm');
+      const crossTube = num('crossTubeCm');
+      const crossSpacing = num('crossSpacingCm');
+      const crossFitMode = val('crossFitMode');
+      let crossCount = Math.max(0, Math.floor(num('crossCount')));
+      let realCrossSpacing = 0;
+      if (crossFitMode === 'none') {
+        crossCount = 0;
+      } else if (crossFitMode === 'auto') {
+        const freeVertical = Math.max(0, panelTotalH - 2 * frameTube);
+        crossCount = Math.max(0, Math.ceil((freeVertical - crossSpacing) / (crossSpacing + crossTube)));
+        if (crossCount > 0) {
+          realCrossSpacing = (freeVertical - (crossCount * crossTube)) / (crossCount + 1);
+        } else {
+          realCrossSpacing = freeVertical;
+        }
+      } else {
+        const freeVertical = Math.max(0, panelTotalH - 2 * frameTube);
+        if (crossCount > 0) {
+          realCrossSpacing = (freeVertical - (crossCount * crossTube)) / (crossCount + 1);
+        } else {
+          realCrossSpacing = freeVertical;
+        }
+      }
+      const sheetHeight = num('sheetHeightCm');
+      const stockLength = num('stockLengthCm');
+      const kerf = num('kerfCm');
+      const frameStockPrice = num('frameStockPrice');
+      const barStockPrice = num('barStockPrice');
+      const crossStockPrice = num('crossStockPrice');
+      const sheetPriceM2 = num('sheetPriceM2');
+      const extraCost = num('extraCost');
+
+      const pieces = [];
+      const notes = [];
+
+      const panelTotalW = Math.max(0, W - 2 * outerFrameClearance);
+      const panelTotalH = Math.max(0, H - 2 * outerFrameClearance);
+      const leafW = leafCount >= 2 ? (panelTotalW - centerGap * (leafCount - 1)) / leafCount : panelTotalW;
+      const horizontalCut = discountHorizontals ? Math.max(0, leafW - 2 * frameTube) : leafW;
+      const verticalCut = panelTotalH;
+
+      if (useOuterFrame) {
+        pieces.push({ material: outerFrameMaterial, desc: 'Marco fijo exterior vertical', length: H, qty: 2, group: 'outer' });
+        pieces.push({ material: outerFrameMaterial, desc: 'Marco fijo exterior horizontal', length: W, qty: 2, group: 'outer' });
+      }
+
+      for (let leaf = 1; leaf <= leafCount; leaf++) {
+        pieces.push({ material: frameMaterial, desc: `Vertical marco hoja ${leaf}`, length: verticalCut, qty: 2, group: 'frame' });
+        pieces.push({ material: frameMaterial, desc: `Horizontal superior/inferior hoja ${leaf}`, length: horizontalCut, qty: 2, group: 'frame' });
+
+        for (let c = 1; c <= crossCount; c++) {
+          pieces.push({ material: crossMaterial, desc: `Travesaño interno hoja ${leaf}`, length: horizontalCut, qty: 1, group: 'cross' });
+        }
+      }
+
+      const innerW = Math.max(0, horizontalCut);
+      const usableBarH = Math.max(0, H - barHeightDiscount);
+      let barsPerLeaf = 0;
+      let realBarSpacing = 0;
+      if (useBars) {
+        const availableW = Math.max(0, leafW - 2 * frameTube);
+        if (barFitMode === 'max_spacing') {
+          barsPerLeaf = Math.max(0, Math.ceil((availableW - barSpacing) / (barWidth + barSpacing)));
+        } else {
+          barsPerLeaf = Math.max(0, Math.round((availableW - barSpacing) / (barWidth + barSpacing)));
+        }
+        if (barsPerLeaf > 0) {
+          realBarSpacing = (availableW - (barsPerLeaf * barWidth)) / (barsPerLeaf + 1);
+          for (let leaf = 1; leaf <= leafCount; leaf++) {
+            pieces.push({ material: barMaterial, desc: `Barrote vertical hoja ${leaf}`, length: usableBarH, qty: barsPerLeaf, group: 'bar' });
+          }
+        }
+      }
+
+      const sheetAreaM2 = sheetHeight > 0 ? (panelTotalW / 100) * (sheetHeight / 100) : 0;
+      const sheetCost = sheetAreaM2 * sheetPriceM2;
+
+      const grouped = groupPieces(pieces);
+      const outerLengths = [];
+      const frameLengths = [];
+      const crossLengths = [];
+      const barLengths = [];
+      for (const p of pieces) {
+        for (let i = 0; i < p.qty; i++) {
+          if (p.group === 'outer') outerLengths.push(p.length);
+          else if (p.group === 'bar') barLengths.push(p.length);
+          else if (p.group === 'cross') crossLengths.push(p.length);
+          else frameLengths.push(p.length);
+        }
+      }
+
+      const outerBars = optimizeBars(outerLengths, stockLength, kerf);
+      const frameBars = optimizeBars(frameLengths, stockLength, kerf);
+      const crossBars = optimizeBars(crossLengths, stockLength, kerf);
+      const barBars = optimizeBars(barLengths, stockLength, kerf);
+      const outerCost = outerBars.length * outerFrameStockPrice;
+      const frameCost = frameBars.length * frameStockPrice;
+      const crossCost = crossBars.length * crossStockPrice;
+      const barsCost = barBars.length * barStockPrice;
+      const totalCost = outerCost + frameCost + crossCost + barsCost + sheetCost + extraCost;
+
+      if (leafCount >= 2 && centerGap <= 0) notes.push('En aberturas de varios paneles conviene dejar una luz mínima entre hojas/paneles o definir si van soldados entre sí. Cargaste 0 cm.');
+      if (discountHorizontals) notes.push('Horizontales calculados entre verticales: se descontó dos veces el ancho visual del caño.');
+      if (projectType === 'porton') notes.push('Para portón real faltaría sumar columnas, bisagras, pasador, cerradura, ruedas o guía según el sistema.');
+      if (projectType === 'abertura') notes.push('Tipo abertura/cerramiento: pensado para varios paneles de fondo. Si los paneles van fijos y soldados entre sí, podés usar luz 0; si van separados o montados en obra, dejá juego.');
+      if (useOuterFrame) notes.push(`Marco fijo exterior activado: se calcula un perímetro de ${outerFrameMaterial}. Las hojas/paneles se calculan dentro de ese marco, descontando ${outerFrameClearance} cm por lado como luz de montaje.`);
+      if (sheetHeight > 0) notes.push(`Chapa inferior estimada: ${round(sheetAreaM2, 2)} m². No se optimizó por tamaño comercial de chapa.`);
+      if (barsPerLeaf === 0 && useBars) notes.push('Con esas medidas no entraron barrotes según la separación cargada. Revisá ancho, separación o espesor.');
+      if (useBars && barsPerLeaf > 0) notes.push(`Barrotes calculados automáticamente: ${barsPerLeaf} por hoja. Separación libre real aproximada: ${round(realBarSpacing, 1)} cm.`);
+      if (crossFitMode === 'auto') notes.push(`Travesaños calculados automáticamente: ${crossCount} por hoja. Separación vertical libre real aproximada: ${round(realCrossSpacing, 1)} cm. Medida visible usada para cada travesaño: ${crossTube} cm.`);
+      if (crossFitMode === 'none') notes.push('Travesaños internos desactivados. Solo se calcula el marco exterior.');
+
+      renderTitle(projectName, W, H, leafCount);
+      renderDrawing({ projectName, W, H, panelTotalW, panelTotalH, useOuterFrame, outerFrameFace, outerFrameClearance, leafCount, leafW, centerGap, frameTube, crossTube, crossCount, useBars, barsPerLeaf, barWidth, barDepth, sheetHeight });
+      renderSummary({ outerBars, frameBars, crossBars, barBars, totalCost, outerCost, frameCost, crossCost, barsCost, sheetCost, extraCost, pieces, sheetAreaM2 });
+      renderCutList(grouped);
+      renderBuyList({ outerFrameMaterial, frameMaterial, crossMaterial, barMaterial, outerBars, frameBars, crossBars, barBars, stockLength, outerCost, frameCost, crossCost, barsCost, sheetCost, extraCost, totalCost });
+      renderNotes(notes);
+    }
+
+    function renderTitle(name, W, H, leafCount) {
+      document.getElementById('resultTitle').textContent = `${name} - ${fmtCm(W)} x ${fmtCm(H)} - ${leafCount} hoja/panel${leafCount > 1 ? 'es' : ''}`;
+    }
+
+    function renderDrawing(d) {
+      const maxW = 520;
+      const maxH = 700;
+      const margin = 70;
+      const scale = Math.min((maxW - margin * 2) / d.W, (maxH - margin * 2) / d.H);
+      const drawW = d.W * scale;
+      const drawH = d.H * scale;
+      const panelOffset = d.useOuterFrame ? d.outerFrameClearance * scale : 0;
+      const panelDrawH = (d.panelTotalH || d.H) * scale;
+      const x0 = margin;
+      const y0 = margin;
+      const strokeFrame = Math.max(5, d.frameTube * scale);
+      const strokeBar = Math.max(2, d.barWidth * scale);
+      const strokeCross = Math.max(3, (d.crossTube || d.frameTube) * scale);
+      const svgW = drawW + margin * 2;
+      const svgH = drawH + margin * 2 + 35;
+      const leafGapPx = d.leafCount >= 2 ? d.centerGap * scale : 0;
+      const leafDrawW = d.leafW * scale;
+
+      let svg = `<svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">`;
+      svg += `<text x="${x0}" y="28" font-size="16" font-weight="700">${escapeHtml(d.projectName)}</text>`;
+      svg += `<text x="${x0}" y="48" font-size="12" fill="#555">Ancho ${d.W} cm · Alto ${d.H} cm · ${d.leafCount} hoja/panel${d.leafCount>1?'es':''}</text>`;
+
+      if (d.useOuterFrame) {
+        const outerStroke = Math.max(3, d.outerFrameFace * scale);
+        svg += `<rect x="${x0}" y="${y0}" width="${drawW}" height="${drawH}" fill="none" stroke="#666" stroke-width="${outerStroke}"/>`;
+        svg += `<text x="${x0 + 8}" y="${y0 + 18}" font-size="11" fill="#666">marco fijo exterior</text>`;
+      }
+
+      // Cotas generales
+      svg += `<line x1="${x0}" y1="${y0 + drawH + 28}" x2="${x0 + drawW}" y2="${y0 + drawH + 28}" stroke="#555" stroke-width="1"/>`;
+      svg += `<text x="${x0 + drawW/2 - 30}" y="${y0 + drawH + 48}" font-size="12" fill="#555">${d.W} cm</text>`;
+      svg += `<line x1="${x0 - 28}" y1="${y0}" x2="${x0 - 28}" y2="${y0 + drawH}" stroke="#555" stroke-width="1"/>`;
+      svg += `<text x="${x0 - 58}" y="${y0 + drawH/2}" font-size="12" fill="#555" transform="rotate(-90 ${x0 - 58},${y0 + drawH/2})">${d.H} cm</text>`;
+
+      for (let leaf = 0; leaf < d.leafCount; leaf++) {
+        const lx = x0 + panelOffset + leaf * (leafDrawW + leafGapPx);
+        const ly = y0 + panelOffset;
+        svg += `<rect x="${lx}" y="${ly}" width="${leafDrawW}" height="${panelDrawH}" fill="none" stroke="#111" stroke-width="${strokeFrame}"/>`;
+
+        for (let c = 1; c <= d.crossCount; c++) {
+          const cy = ly + (panelDrawH / (d.crossCount + 1)) * c;
+          svg += `<line x1="${lx}" y1="${cy}" x2="${lx + leafDrawW}" y2="${cy}" stroke="#111" stroke-width="${strokeCross}"/>`;
+        }
+
+        if (d.sheetHeight > 0) {
+          const sh = Math.min(panelDrawH, d.sheetHeight * scale);
+          svg += `<rect x="${lx + strokeFrame/2}" y="${ly + panelDrawH - sh}" width="${Math.max(0, leafDrawW - strokeFrame)}" height="${sh - strokeFrame/2}" fill="#ddd" stroke="#111" stroke-width="1"/>`;
+          svg += `<text x="${lx + 8}" y="${ly + panelDrawH - sh + 18}" font-size="11" fill="#333">chapa ${d.sheetHeight} cm</text>`;
+        }
+
+        if (d.useBars && d.barsPerLeaf > 0) {
+          const innerLeft = lx + strokeFrame;
+          const innerRight = lx + leafDrawW - strokeFrame;
+          const barTop = ly + strokeFrame/2;
+          const barBottom = ly + panelDrawH - strokeFrame/2;
+          const gap = (innerRight - innerLeft) / (d.barsPerLeaf + 1);
+          for (let b = 1; b <= d.barsPerLeaf; b++) {
+            const bx = innerLeft + gap * b;
+            svg += `<line x1="${bx}" y1="${barTop}" x2="${bx}" y2="${barBottom}" stroke="#111" stroke-width="${strokeBar}"/>`;
+          }
+        }
+      }
+
+      if (d.leafCount >= 2 && d.centerGap > 0) {
+        for (let g = 1; g < d.leafCount; g++) {
+          const gx = x0 + panelOffset + g * leafDrawW + (g - 1) * leafGapPx;
+          svg += `<text x="${gx + 3}" y="${y0 - 8}" font-size="11" fill="#555">luz ${d.centerGap} cm</text>`;
+        }
+      }
+
+      svg += `</svg>`;
+      document.getElementById('drawing').innerHTML = svg;
+    }
+
+    function renderSummary(data) {
+      const totalPiecesLength = data.pieces.reduce((s, p) => s + p.length * p.qty, 0);
+      document.getElementById('summary').innerHTML = `
+        <div class="card"><div class="label">Barras marco fijo</div><div class="value">${data.outerBars.length}</div></div>
+        <div class="card"><div class="label">Barras marco hojas</div><div class="value">${data.frameBars.length}</div></div>
+        <div class="card"><div class="label">Barras travesaños</div><div class="value">${data.crossBars.length}</div></div>
+        <div class="card"><div class="label">Barras barrotes</div><div class="value">${data.barBars.length}</div></div>
+        <div class="card"><div class="label">Hierro total lineal</div><div class="value">${round(totalPiecesLength / 100, 2)} m</div></div>
+        <div class="card"><div class="label">Costo estimado</div><div class="value">${fmtMoney(data.totalCost)}</div></div>
+      `;
+    }
+
+    function renderCutList(grouped) {
+      if (!grouped.length) {
+        document.getElementById('cutList').innerHTML = '<p class="note">Sin piezas calculadas.</p>';
+        return;
+      }
+      let html = `<table><thead><tr><th>Cant.</th><th>Largo</th><th>Material</th><th>Uso</th></tr></thead><tbody>`;
+      for (const p of grouped) {
+        html += `<tr><td>${p.qty}</td><td>${fmtCm(p.length)}</td><td>${escapeHtml(p.material)}</td><td>${escapeHtml(p.desc)}</td></tr>`;
+      }
+      html += `</tbody></table>`;
+      document.getElementById('cutList').innerHTML = html;
+    }
+
+    function renderBuyList(d) {
+      let html = `<table><thead><tr><th>Material</th><th>Barras</th><th>Largo comercial</th><th>Costo</th></tr></thead><tbody>`;
+      html += `<tr><td>${escapeHtml(d.outerFrameMaterial)} <span style="color:#71717a">(marco fijo exterior)</span></td><td>${d.outerBars.length}</td><td>${fmtCm(d.stockLength)}</td><td>${fmtMoney(d.outerCost)}</td></tr>`;
+      html += `<tr><td>${escapeHtml(d.frameMaterial)} <span style="color:#71717a">(marco hojas/paneles)</span></td><td>${d.frameBars.length}</td><td>${fmtCm(d.stockLength)}</td><td>${fmtMoney(d.frameCost)}</td></tr>`;
+      html += `<tr><td>${escapeHtml(d.crossMaterial)} <span style="color:#71717a">(travesaños)</span></td><td>${d.crossBars.length}</td><td>${fmtCm(d.stockLength)}</td><td>${fmtMoney(d.crossCost)}</td></tr>`;
+      html += `<tr><td>${escapeHtml(d.barMaterial)} <span style="color:#71717a">(barrotes)</span></td><td>${d.barBars.length}</td><td>${fmtCm(d.stockLength)}</td><td>${fmtMoney(d.barsCost)}</td></tr>`;
+      html += `<tr><td>Chapa</td><td>-</td><td>-</td><td>${fmtMoney(d.sheetCost)}</td></tr>`;
+      html += `<tr><td>Accesorios</td><td>-</td><td>-</td><td>${fmtMoney(d.extraCost)}</td></tr>`;
+      html += `<tr><td><strong>Total estimado</strong></td><td></td><td></td><td><strong>${fmtMoney(d.totalCost)}</strong></td></tr>`;
+      html += `</tbody></table>`;
+
+      html += `<h4>Optimización marco fijo exterior</h4>` + renderBars(d.outerBars);
+      html += `<h4>Optimización marco hojas/paneles</h4>` + renderBars(d.frameBars);
+      html += `<h4>Optimización travesaños</h4>` + renderBars(d.crossBars);
+      html += `<h4>Optimización barrotes</h4>` + renderBars(d.barBars);
+      document.getElementById('buyList').innerHTML = html;
+    }
+
+    function renderBars(bars) {
+      if (!bars.length) return '<p class="note">No requiere barras.</p>';
+      let html = `<table><thead><tr><th>Barra</th><th>Cortes</th><th>Usado</th><th>Sobrante</th></tr></thead><tbody>`;
+      for (const b of bars) {
+        html += `<tr><td>${b.index}</td><td>${b.items.map(x => round(x,1)).join(' + ')}</td><td>${fmtCm(b.used)}</td><td>${fmtCm(b.waste)}</td></tr>`;
+      }
+      html += `</tbody></table>`;
+      return html;
+    }
+
+    function renderNotes(notes) {
+      const base = [
+        'Revisar siempre en taller: escuadra, luz de bisagras, juego contra piso, soldadura y deformación por calor.',
+        'La optimización de barras usa un método simple de mejor encaje; sirve para taller, pero no reemplaza una revisión manual antes de cortar.',
+        'Para portones grandes conviene agregar parantes/refuerzos diagonales y verificar peso de hoja.'
+      ];
+      const all = [...notes, ...base];
+      document.getElementById('notes').innerHTML = '<ul>' + all.map(n => `<li>${escapeHtml(n)}</li>`).join('') + '</ul>';
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>'"]/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\'': '&#39;', '"': '&quot;' }[s]));
+    }
+
+    calculate();
+  </script>
+</body>
+</html>
